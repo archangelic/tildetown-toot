@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import json
+import os
+import sys
+
+import click
+from mastodon import Mastodon
+
+# get config
+config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'toot.json')
+with open(config_file) as f:
+    config = json.load(f)
+
+# set up connection to mastodon
+mastodon = Mastodon(
+    client_id=config['client_id'],
+    client_secret=config['client_secret'],
+    access_token=config['access_token'],
+    api_base_url=config['base_url'],
+)
+
+@click.command()
+@click.argument('status', required=False)
+def toot(status):
+    # get status from argument or from stdin
+    if not status:
+        status = "".join(sys.stdin).strip()
+
+    # check status length and post status
+    if len(status) > 500:
+        print("Status is too long, try again")
+    elif len(status) == 0:
+        print("Did you type a status?")
+    else:
+        mastodon.toot(status)
+
+if __name__=='__main__':
+    toot()
