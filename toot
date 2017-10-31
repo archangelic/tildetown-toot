@@ -4,6 +4,7 @@ import os
 import sys
 
 import click
+import emoji
 from mastodon import Mastodon
 
 # get config
@@ -25,6 +26,9 @@ def toot(status):
     # get status from argument or from stdin
     if not status:
         status = "".join(sys.stdin).strip()
+
+    # replace shortcodes with emoji :thumbsup:
+    status = emoji.emojize(status, use_aliases=True)
 
     # check status length and post status
     if len(status) > 500:
