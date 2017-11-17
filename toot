@@ -20,9 +20,29 @@ mastodon = Mastodon(
     api_base_url=config['base_url'],
 )
 
+def check_valid_files(ctx, param, filenames):
+    if filenames:
+        if len(filenames) > 4:
+            raise click.BadParameter('too many files!')
+        for filename in filenames:
+            if not os.path.isfile(filename):
+                raise click.BadParameter('"{}" is not a valid file'.format(filename))
+    return filenames
+
+def post_to_masto(status, media):
+    files = []
+    for fname in media:
+        media_info = mastodon.media_post(fname)
+        files.append(media_info)
+    if not files:
+        files = None
+    mastodon.status_post(status, media_ids=files)
+
+
 @click.command()
 @click.argument('status', required=False)
-def toot(status):
+@click.option('--media', '-m', multiple=True, callback=check_valid_files)
+def toot(status, media):
     # get status from argument or from stdin
     if not status:
         status = "".join(sys.stdin).strip()
@@ -36,7 +56,9 @@ def toot(status):
     elif len(status) == 0:
         print("Did you type a status?")
     else:
-        mastodon.toot(status)
+        post_to_masto(status, media)
+
+
 
 if __name__=='__main__':
     toot()
